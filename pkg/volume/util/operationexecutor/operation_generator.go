@@ -521,9 +521,13 @@ func (og *operationGenerator) GenerateMountVolumeFunc(
 			volumeDeviceMounter, _ = deviceMountableVolumePlugin.NewDeviceMounter()
 		}
 
+		var fsUser = util.FsUserFrom(volumeToMount.Pod)
 		var fsGroup *int64
 		var fsGroupChangePolicy *v1.PodFSGroupChangePolicy
 		if podSc := volumeToMount.Pod.Spec.SecurityContext; podSc != nil {
+			if podSc.FSUser != nil {
+				fsUser = podSc.FSUser
+			}
 			if podSc.FSGroup != nil {
 				fsGroup = podSc.FSGroup
 			}
@@ -603,7 +607,7 @@ func (og *operationGenerator) GenerateMountVolumeFunc(
 
 		// Execute mount
 		mountErr := volumeMounter.SetUp(volume.MounterArgs{
-			FsUser:              util.FsUserFrom(volumeToMount.Pod),
+			FsUser:              fsUser,
 			FsGroup:             fsGroup,
 			DesiredSize:         volumeToMount.DesiredSizeLimit,
 			FSGroupChangePolicy: fsGroupChangePolicy,

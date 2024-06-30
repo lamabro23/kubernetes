@@ -236,6 +236,9 @@ func (ed *emptyDir) SetUp(mounterArgs volume.MounterArgs) error {
 
 // SetUpAt creates new directory.
 func (ed *emptyDir) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
+	if mounterArgs.FsGroup != nil && mounterArgs.FsUser != nil {
+		klog.V(0).Infof("DEBUG: EMPTY_DIR", "FSUser", *mounterArgs.FsUser, "FsGroup", *mounterArgs.FsGroup)
+	}
 	notMnt, err := ed.mounter.IsLikelyNotMountPoint(dir)
 	// Getting an os.IsNotExist err from is a contingency; the directory
 	// may not exist yet, in which case, setup should run.
@@ -278,7 +281,7 @@ func (ed *emptyDir) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
 		err = fmt.Errorf("unknown storage medium %q", ed.medium)
 	}
 
-	volume.SetVolumeOwnership(ed, dir, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(ed.plugin, nil))
+	volume.SetVolumeOwnership(ed, dir, mounterArgs.FsUser, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(ed.plugin, nil))
 
 	// If setting up the quota fails, just log a message but don't actually error out.
 	// We'll use the old du mechanism in this case, at least until we support

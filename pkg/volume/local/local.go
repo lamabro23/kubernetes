@@ -518,6 +518,8 @@ func (m *localVolumeMounter) SetUp(mounterArgs volume.MounterArgs) error {
 
 // SetUpAt bind mounts the directory to the volume path and sets up volume ownership
 func (m *localVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
+	klog.V(0).Infof("DEBUG: LOCAL, Mounter.SetUpAt(%s)", dir)
+
 	m.plugin.volumeLocks.LockKey(m.globalPath)
 	defer m.plugin.volumeLocks.UnlockKey(m.globalPath)
 
@@ -610,7 +612,7 @@ func (m *localVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs)
 	if !m.readOnly {
 		// Volume owner will be written only once on the first volume mount
 		if len(refs) == 0 {
-			return volume.SetVolumeOwnership(m, dir, mounterArgs.FsGroup, mounterArgs.FSGroupChangePolicy, util.FSGroupCompleteHook(m.plugin, nil))
+			return volume.SetVolumeOwnership(m, dir, mounterArgs.FsUser, mounterArgs.FsGroup, mounterArgs.FSGroupChangePolicy, util.FSGroupCompleteHook(m.plugin, nil))
 		}
 	}
 	return nil

@@ -42,7 +42,9 @@ type diskManager interface {
 // utility to mount a disk based filesystem
 // globalPDPath: global mount path like, /var/lib/kubelet/plugins/kubernetes.io/iscsi/{ifaceName}/{portal-some_iqn-lun-lun_id}
 // volPath: pod volume dir path like, /var/lib/kubelet/pods/{podUID}/volumes/kubernetes.io~iscsi/{volumeName}
-func diskSetUp(manager diskManager, b iscsiDiskMounter, volPath string, mounter mount.Interface, fsGroup *int64, fsGroupChangePolicy *v1.PodFSGroupChangePolicy) error {
+func diskSetUp(manager diskManager, b iscsiDiskMounter, volPath string, mounter mount.Interface, fsUser *int64, fsGroup *int64, fsGroupChangePolicy *v1.PodFSGroupChangePolicy) error {
+	klog.V(0).Infof("DEBUG: ISCSI.DISK_MANAGER, Mounter.SetUpAt(?)")
+
 	notMnt, err := mounter.IsLikelyNotMountPoint(volPath)
 	if err != nil && !os.IsNotExist(err) {
 		klog.Errorf("cannot validate mountpoint: %s", volPath)
@@ -96,7 +98,7 @@ func diskSetUp(manager diskManager, b iscsiDiskMounter, volPath string, mounter 
 	}
 
 	if !b.readOnly {
-		volume.SetVolumeOwnership(&b, volPath, fsGroup, fsGroupChangePolicy, util.FSGroupCompleteHook(b.plugin, nil))
+		volume.SetVolumeOwnership(&b, volPath, fsUser, fsGroup, fsGroupChangePolicy, util.FSGroupCompleteHook(b.plugin, nil))
 	}
 
 	return nil

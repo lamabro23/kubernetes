@@ -24,6 +24,7 @@ import (
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/volume"
 	volumeutil "k8s.io/kubernetes/pkg/volume/util"
 	"k8s.io/utils/exec"
@@ -174,6 +175,7 @@ func (b *gitRepoVolumeMounter) SetUp(mounterArgs volume.MounterArgs) error {
 
 // SetUpAt creates new directory and clones a git repo.
 func (b *gitRepoVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
+	klog.V(0).Infof("DEBUG: GIT_REPO, Mounter.SetUpAt(%s)", dir)
 	if volumeutil.IsReady(b.getMetaDir()) {
 		return nil
 	}
@@ -229,7 +231,7 @@ func (b *gitRepoVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArg
 		return fmt.Errorf("failed to exec 'git reset --hard': %s: %v", output, err)
 	}
 
-	volume.SetVolumeOwnership(b, dir, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(b.plugin, nil))
+	volume.SetVolumeOwnership(b, dir, mounterArgs.FsUser, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(b.plugin, nil))
 
 	volumeutil.SetReady(b.getMetaDir())
 	return nil

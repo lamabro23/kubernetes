@@ -4156,6 +4156,11 @@ func (in *PodSecurityContext) DeepCopyInto(out *PodSecurityContext) {
 		*out = new(SupplementalGroupsPolicy)
 		**out = **in
 	}
+	if in.FSUser != nil {
+		in, out := &in.FSUser, &out.FSUser
+		*out = new(int64)
+		**out = **in
+	}
 	if in.FSGroup != nil {
 		in, out := &in.FSGroup, &out.FSGroup
 		*out = new(int64)

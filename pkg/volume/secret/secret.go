@@ -173,6 +173,8 @@ func (b *secretVolumeMounter) SetUp(mounterArgs volume.MounterArgs) error {
 }
 
 func (b *secretVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
+	klog.V(0).Infof("DEBUG: SECRET, Mounter.SetUpAt(%s)", dir)
+
 	klog.V(3).Infof("Setting up volume %v for pod %v at %v", b.volName, b.pod.UID, dir)
 
 	// Wrap EmptyDir, let it do the setup.
@@ -241,7 +243,7 @@ func (b *secretVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs
 	setPerms := func(_ string) error {
 		// This may be the first time writing and new files get created outside the timestamp subdirectory:
 		// change the permissions on the whole volume and not only in the timestamp directory.
-		return volume.SetVolumeOwnership(b, dir, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(b.plugin, nil))
+		return volume.SetVolumeOwnership(b, dir, mounterArgs.FsUser, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(b.plugin, nil))
 	}
 	err = writer.Write(payload, setPerms)
 	if err != nil {

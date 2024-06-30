@@ -304,6 +304,8 @@ func (b *portworxVolumeMounter) SetUp(mounterArgs volume.MounterArgs) error {
 
 // SetUpAt attaches the disk and bind mounts to the volume path.
 func (b *portworxVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
+	klog.V(0).Infof("DEBUG: PORTWORX, Mounter.SetUpAt(%s)", dir)
+
 	notMnt, err := b.mounter.IsLikelyNotMountPoint(dir)
 	klog.Infof("Portworx Volume set up. Dir: %s %v %v", dir, !notMnt, err)
 	if err != nil && !os.IsNotExist(err) {
@@ -331,7 +333,7 @@ func (b *portworxVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterAr
 		return err
 	}
 	if !b.readOnly {
-		volume.SetVolumeOwnership(b, dir, mounterArgs.FsGroup, mounterArgs.FSGroupChangePolicy, util.FSGroupCompleteHook(b.plugin, nil))
+		volume.SetVolumeOwnership(b, dir, mounterArgs.FsUser, mounterArgs.FsGroup, mounterArgs.FSGroupChangePolicy, util.FSGroupCompleteHook(b.plugin, nil))
 	}
 	klog.Infof("Portworx Volume %s setup at %s", b.volumeID, dir)
 	return nil

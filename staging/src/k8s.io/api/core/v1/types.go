@@ -4371,6 +4371,8 @@ type PodSecurityContext struct {
 	// +featureGate=SupplementalGroupsPolicy
 	// +optional
 	SupplementalGroupsPolicy *SupplementalGroupsPolicy `json:"supplementalGroupsPolicy,omitempty" protobuf:"bytes,12,opt,name=supplementalGroupsPolicy"`
+	// TODO
+	FSUser *int64 `json:"fsUser,omitempty" protobuf:"varint,13,opt,name=fsUser"`
 	// A special supplemental group that applies to all containers in a pod.
 	// Some volume types allow the Kubelet to change the ownership of that volume
 	// to be owned by the pod:

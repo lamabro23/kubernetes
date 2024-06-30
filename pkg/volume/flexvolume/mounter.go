@@ -20,6 +20,7 @@ import (
 	"os"
 	"strconv"
 
+	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/volume"
 	"k8s.io/kubernetes/pkg/volume/util"
 	"k8s.io/utils/exec"
@@ -46,6 +47,7 @@ func (f *flexVolumeMounter) SetUp(mounterArgs volume.MounterArgs) error {
 
 // SetUpAt creates new directory.
 func (f *flexVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
+	klog.V(0).Infof("DEBUG: FLEXVOLUME.MOUNTER, Mounter.SetUpAt(%s)", dir)
 	// Mount only once.
 	alreadyMounted, err := prepareForMount(f.mounter, dir)
 	if err != nil {
@@ -95,7 +97,7 @@ func (f *flexVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs) 
 	if !f.readOnly {
 		if f.plugin.capabilities.FSGroup {
 			// fullPluginName helps to distinguish different driver from flex volume plugin
-			volume.SetVolumeOwnership(f, dir, mounterArgs.FsGroup, mounterArgs.FSGroupChangePolicy, util.FSGroupCompleteHook(f.plugin, f.spec))
+			volume.SetVolumeOwnership(f, dir, mounterArgs.FsUser, mounterArgs.FsGroup, mounterArgs.FSGroupChangePolicy, util.FSGroupCompleteHook(f.plugin, f.spec))
 		}
 	}
 

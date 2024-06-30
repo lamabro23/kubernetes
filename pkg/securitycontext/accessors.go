@@ -19,6 +19,7 @@ package securitycontext
 import (
 	"reflect"
 
+	"k8s.io/klog/v2"
 	api "k8s.io/kubernetes/pkg/apis/core"
 )
 
@@ -34,6 +35,7 @@ type PodSecurityContextAccessor interface {
 	RunAsNonRoot() *bool
 	SeccompProfile() *api.SeccompProfile
 	SupplementalGroups() []int64
+	FSUser() *int64
 	FSGroup() *int64
 }
 
@@ -51,6 +53,7 @@ type PodSecurityContextMutator interface {
 	SetRunAsNonRoot(*bool)
 	SetSeccompProfile(*api.SeccompProfile)
 	SetSupplementalGroups([]int64)
+	SetFSUser(*int64)
 	SetFSGroup(*int64)
 
 	// PodSecurityContext returns the current PodSecurityContext object
@@ -216,6 +219,20 @@ func (w *podSecurityContextWrapper) SetSupplementalGroups(v []int64) {
 		return
 	}
 	w.podSC.SupplementalGroups = v
+}
+func (w *podSecurityContextWrapper) FSUser() *int64 {
+	if w.podSC == nil {
+		return nil
+	}
+	return w.podSC.FSUser
+}
+func (w *podSecurityContextWrapper) SetFSUser(v *int64) {
+	if w.podSC == nil && v == nil {
+		return
+	}
+	w.ensurePodSC()
+	w.podSC.FSUser = v
+	klog.V(3).Infof("FSUser: %v", w.podSC.FSUser)
 }
 func (w *podSecurityContextWrapper) FSGroup() *int64 {
 	if w.podSC == nil {

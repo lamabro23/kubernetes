@@ -169,6 +169,7 @@ func (b *downwardAPIVolumeMounter) SetUp(mounterArgs volume.MounterArgs) error {
 
 func (b *downwardAPIVolumeMounter) SetUpAt(dir string, mounterArgs volume.MounterArgs) error {
 	klog.V(3).Infof("Setting up a downwardAPI volume %v for pod %v/%v at %v", b.volName, b.pod.Namespace, b.pod.Name, dir)
+	klog.V(0).Infof("DEBUG: DOWNWARDAPI, Mounter.SetUpAt(%s)", dir)
 	// Wrap EmptyDir. Here we rely on the idempotency of the wrapped plugin to avoid repeatedly mounting
 	wrapped, err := b.plugin.host.NewWrapperMounter(b.volName, wrappedVolumeSpec(), b.pod)
 	if err != nil {
@@ -217,7 +218,7 @@ func (b *downwardAPIVolumeMounter) SetUpAt(dir string, mounterArgs volume.Mounte
 	setPerms := func(_ string) error {
 		// This may be the first time writing and new files get created outside the timestamp subdirectory:
 		// change the permissions on the whole volume and not only in the timestamp directory.
-		return volume.SetVolumeOwnership(b, dir, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(b.plugin, nil))
+		return volume.SetVolumeOwnership(b, dir, mounterArgs.FsUser, mounterArgs.FsGroup, nil /*fsGroupChangePolicy*/, volumeutil.FSGroupCompleteHook(b.plugin, nil))
 	}
 	err = writer.Write(data, setPerms)
 	if err != nil {

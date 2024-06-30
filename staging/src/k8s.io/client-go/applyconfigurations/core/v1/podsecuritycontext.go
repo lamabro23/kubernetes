@@ -32,6 +32,7 @@ type PodSecurityContextApplyConfiguration struct {
 	RunAsNonRoot             *bool                                            `json:"runAsNonRoot,omitempty"`
 	SupplementalGroups       []int64                                          `json:"supplementalGroups,omitempty"`
 	SupplementalGroupsPolicy *corev1.SupplementalGroupsPolicy                 `json:"supplementalGroupsPolicy,omitempty"`
+	FSUser                   *int64                                           `json:"fsUser,omitempty"`
 	FSGroup                  *int64                                           `json:"fsGroup,omitempty"`
 	Sysctls                  []SysctlApplyConfiguration                       `json:"sysctls,omitempty"`
 	FSGroupChangePolicy      *corev1.PodFSGroupChangePolicy                   `json:"fsGroupChangePolicy,omitempty"`
@@ -100,6 +101,14 @@ func (b *PodSecurityContextApplyConfiguration) WithSupplementalGroups(values ...
 // If called multiple times, the SupplementalGroupsPolicy field is set to the value of the last call.
 func (b *PodSecurityContextApplyConfiguration) WithSupplementalGroupsPolicy(value corev1.SupplementalGroupsPolicy) *PodSecurityContextApplyConfiguration {
 	b.SupplementalGroupsPolicy = &value
+	return b
+}
+
+// WithFSUser sets the FSUser field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FSUser field is set to the value of the last call.
+func (b *PodSecurityContextApplyConfiguration) WithFSUser(value int64) *PodSecurityContextApplyConfiguration {
+	b.FSUser = &value
 	return b
 }
 

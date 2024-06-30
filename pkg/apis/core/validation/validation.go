@@ -4308,6 +4308,9 @@ func validateWindows(spec *core.PodSpec, fldPath *field.Path) field.ErrorList {
 		if securityContext.SeccompProfile != nil {
 			allErrs = append(allErrs, field.Forbidden(fldPath.Child("securityContext").Child("seccompProfile"), "cannot be set for a windows pod"))
 		}
+		if securityContext.FSUser != nil {
+			allErrs = append(allErrs, field.Forbidden(fldPath.Child("securityContext").Child("fsUser"), "cannot be set for a windows pod"))
+		}
 		if securityContext.FSGroup != nil {
 			allErrs = append(allErrs, field.Forbidden(fldPath.Child("securityContext").Child("fsGroup"), "cannot be set for a windows pod"))
 		}
@@ -4924,6 +4927,11 @@ func validatePodSpecSecurityContext(securityContext *core.PodSecurityContext, sp
 	allErrs := field.ErrorList{}
 
 	if securityContext != nil {
+		if securityContext.FSUser != nil {
+			for _, msg := range validation.IsValidUserID(*securityContext.FSUser) {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("fsUser"), *(securityContext.FSUser), msg))
+			}
+		}
 		if securityContext.FSGroup != nil {
 			for _, msg := range validation.IsValidGroupID(*securityContext.FSGroup) {
 				allErrs = append(allErrs, field.Invalid(fldPath.Child("fsGroup"), *(securityContext.FSGroup), msg))

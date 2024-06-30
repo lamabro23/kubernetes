@@ -864,6 +864,7 @@ template:
         type: typeValue
       fsGroup: 5
       fsGroupChangePolicy: fsGroupChangePolicyValue
+      fsUser: 13
       runAsGroup: 6
       runAsNonRoot: true
       runAsUser: 2

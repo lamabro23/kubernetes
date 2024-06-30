@@ -40,8 +40,10 @@ const (
 // SetVolumeOwnership modifies the given volume to be owned by
 // fsGroup, and sets SetGid so that newly created files are owned by
 // fsGroup. If fsGroup is nil nothing is done.
-func SetVolumeOwnership(mounter Mounter, dir string, fsGroup *int64, fsGroupChangePolicy *v1.PodFSGroupChangePolicy, completeFunc func(types.CompleteFuncParam)) error {
-	if fsGroup == nil {
+// TODO
+func SetVolumeOwnership(mounter Mounter, dir string, fsUser *int64, fsGroup *int64, fsGroupChangePolicy *v1.PodFSGroupChangePolicy, completeFunc func(types.CompleteFuncParam)) error {
+	klog.V(0).InfoS("In the SetVolumeOwnership function with", "fsUser", fsUser, "fsGroup", fsGroup)
+	if fsUser == nil && fsGroup == nil {
 		return nil
 	}
 
@@ -50,7 +52,7 @@ func SetVolumeOwnership(mounter Mounter, dir string, fsGroup *int64, fsGroupChan
 	})
 	defer timer.Stop()
 
-	if skipPermissionChange(mounter, dir, fsGroup, fsGroupChangePolicy) {
+	if skipPermissionChange(mounter, dir, fsUser, fsGroup, fsGroupChangePolicy) {
 		klog.V(3).InfoS("Skipping permission and ownership change for volume", "path", dir)
 		return nil
 	}
@@ -59,7 +61,7 @@ func SetVolumeOwnership(mounter Mounter, dir string, fsGroup *int64, fsGroupChan
 		if err != nil {
 			return err
 		}
-		return changeFilePermission(path, fsGroup, mounter.GetAttributes().ReadOnly, info)
+		return changeFilePermission(path, fsUser, fsGroup, mounter.GetAttributes().ReadOnly, info)
 	})
 	if completeFunc != nil {
 		completeFunc(types.CompleteFuncParam{
@@ -69,8 +71,12 @@ func SetVolumeOwnership(mounter Mounter, dir string, fsGroup *int64, fsGroupChan
 	return err
 }
 
-func changeFilePermission(filename string, fsGroup *int64, readonly bool, info os.FileInfo) error {
-	err := os.Lchown(filename, -1, int(*fsGroup))
+func changeFilePermission(filename string, fsUser *int64, fsGroup *int64, readonly bool, info os.FileInfo) error {
+	fsUserVal := getFsValue(fsUser)
+	fsGroupVal := getFsValue(fsGroup)
+
+	err := os.Lchown(filename, int(fsUserVal), int(fsGroupVal))
+	// err := os.Lchown(filename, -1, int(*fsGroup))
 	if err != nil {
 		klog.ErrorS(err, "Lchown failed", "path", filename)
 	}
@@ -96,6 +102,7 @@ func changeFilePermission(filename string, fsGroup *int64, readonly bool, info o
 		mask |= execMask
 	}
 
+	klog.V(0).InfoS("In the changeFilePermission function with", "filename", filename, "mode", info.Mode(), "mask", mask)
 	err = os.Chmod(filename, info.Mode()|mask)
 	if err != nil {
 		klog.ErrorS(err, "chmod failed", "path", filename)
@@ -104,15 +111,22 @@ func changeFilePermission(filename string, fsGroup *int64, readonly bool, info o
 	return nil
 }
 
-func skipPermissionChange(mounter Mounter, dir string, fsGroup *int64, fsGroupChangePolicy *v1.PodFSGroupChangePolicy) bool {
+func getFsValue(fsValue *int64) int64 {
+	if fsValue == nil {
+		return -1
+	}
+	return *fsValue
+}
+
+func skipPermissionChange(mounter Mounter, dir string, fsUser *int64, fsGroup *int64, fsGroupChangePolicy *v1.PodFSGroupChangePolicy) bool {
 	if fsGroupChangePolicy == nil || *fsGroupChangePolicy != v1.FSGroupChangeOnRootMismatch {
 		klog.V(4).InfoS("Perform recursive ownership change for directory", "path", dir)
 		return false
 	}
-	return !requiresPermissionChange(dir, fsGroup, mounter.GetAttributes().ReadOnly)
+	return !requiresPermissionChange(dir, fsUser, fsGroup, mounter.GetAttributes().ReadOnly)
 }
 
-func requiresPermissionChange(rootDir string, fsGroup *int64, readonly bool) bool {
+func requiresPermissionChange(rootDir string, fsUser *int64, fsGroup *int64, readonly bool) bool {
 	fsInfo, err := os.Stat(rootDir)
 	if err != nil {
 		klog.ErrorS(err, "Performing recursive ownership change on rootDir because reading permissions of root volume failed", "path", rootDir)
@@ -126,6 +140,11 @@ func requiresPermissionChange(rootDir string, fsGroup *int64, readonly bool) boo
 
 	if int(stat.Gid) != int(*fsGroup) {
 		klog.V(4).InfoS("Expected group ownership of volume did not match with Gid", "path", rootDir, "GID", stat.Gid)
+		return true
+	}
+
+	if int(stat.Uid) != int(*fsUser) {
+		klog.V(4).InfoS("Expected user ownership of volume did not match with Uid", "path", rootDir, "UID", stat.Uid)
 		return true
 	}
 	unixPerms := rwMask
