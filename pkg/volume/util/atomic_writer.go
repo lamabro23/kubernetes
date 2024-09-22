@@ -220,6 +220,11 @@ func (w *AtomicWriter) Write(payload map[string]FileProjection, setPerms func(su
 			return err
 		}
 
+		if err := setPerms(newDataDirPath); err != nil {
+			klog.Errorf("%s: error applying ownership settings: %v", w.logContext, err)
+			return err
+		}
+
 		// (9)
 		if runtime.GOOS == "windows" {
 			if err := os.Remove(dataDirPath); err != nil {
@@ -245,9 +250,16 @@ func (w *AtomicWriter) Write(payload map[string]FileProjection, setPerms func(su
 	}
 
 	// (10)
-	if err = w.createUserVisibleFiles(cleanPayload); err != nil {
+	filepaths, err := w.createUserVisibleFiles(cleanPayload)
+	if err != nil {
 		klog.Errorf("%s: error creating visible symlinks in %s: %v", w.logContext, w.targetDir, err)
 		return err
+	}
+	for _, p := range filepaths {
+		if err := setPerms(p); err != nil {
+			klog.Errorf("%s: error applying ownership settings: %v", w.logContext, err)
+			return err
+		}
 	}
 
 	// (11)
@@ -464,7 +476,10 @@ func (w *AtomicWriter) writePayloadToDir(payload map[string]FileProjection, dir 
 // bar -> ..data/bar
 // foo -> ..data/foo
 // baz -> ..data/baz
-func (w *AtomicWriter) createUserVisibleFiles(payload map[string]FileProjection) error {
+func (w *AtomicWriter) createUserVisibleFiles(payload map[string]FileProjection) ([]string, error) {
+	// prepare an array to hold filepaths to be returned
+	var filepaths []string
+
 	for userVisiblePath := range payload {
 		slashpos := strings.Index(userVisiblePath, string(os.PathSeparator))
 		if slashpos == -1 {
@@ -479,11 +494,12 @@ func (w *AtomicWriter) createUserVisibleFiles(payload map[string]FileProjection)
 
 			err = os.Symlink(dataDirFile, visibleFile)
 			if err != nil {
-				return err
+				return nil, err
 			}
+			filepaths = append(filepaths, visibleFile)
 		}
 	}
-	return nil
+	return filepaths, nil
 }
 
 // removeUserVisiblePaths removes the set of paths from the user-visible
