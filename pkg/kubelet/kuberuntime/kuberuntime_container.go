@@ -373,6 +373,28 @@ func (m *kubeGenericRuntimeManager) generateContainerConfig(ctx context.Context,
 		Tty:         container.TTY,
 	}
 
+	// if strings.Contains(container.Name, "basic-ctr") {
+	// 	klog.V(0).InfoS("DEBUG: PRE-BEGIN,generateContainerConfig", "config", config)
+	// 	uidMappings := []*runtimeapi.IDMapping{}
+	// 	gidMappings := []*runtimeapi.IDMapping{}
+	//
+	// 	uidMappings = append(uidMappings, &runtimeapi.IDMapping{
+	// 		HostId:      1000,
+	// 		ContainerId: 2000,
+	// 		Length:      1,
+	// 	})
+	//
+	// 	gidMappings = append(gidMappings, &runtimeapi.IDMapping{
+	// 		HostId:      1000,
+	// 		ContainerId: 2000,
+	// 		Length:      1,
+	// 	})
+	//
+	// 	config.Mounts[0].UidMappings = uidMappings
+	// 	config.Mounts[0].GidMappings = gidMappings
+	// }
+	klog.V(0).InfoS("DEBUG: PRE-END,generateContainerConfig", "config", config)
+
 	// set platform specific configurations.
 	if err := m.applyPlatformSpecificContainerConfig(config, container, pod, uid, username, nsTarget); err != nil {
 		return nil, cleanupAction, err
@@ -389,6 +411,7 @@ func (m *kubeGenericRuntimeManager) generateContainerConfig(ctx context.Context,
 	}
 	config.Envs = envs
 
+	klog.V(0).InfoS("DEBUG: generateContainerConfig", "config", config)
 	return config, cleanupAction, nil
 }
 
