@@ -326,27 +326,49 @@ func (m *UsernsManager) parseUserNsFileAndRecord(pod types.UID, content []byte) 
 		return
 	}
 
-	if userNs.UIDMappings[0] != userNs.GIDMappings[0] {
-		err = fmt.Errorf("invalid user namespace configuration: GID and UID mapping should be identical")
-		return
+	for i := range userNs.UIDMappings {
+		if userNs.UIDMappings[i].ContainerId != userNs.GIDMappings[i].ContainerId {
+			err = fmt.Errorf("invalid user namespace configuration: GID and UID mappings should be identical.")
+			return
+		}
 	}
 
 	// We don't produce configs without root mapped and some runtimes assume it is mapped.
 	// Validate the file has something we produced and can digest.
-	if userNs.UIDMappings[0].ContainerId != 0 {
+	rootPresent := false
+	for _, v := range userNs.UIDMappings {
+		if v.ContainerId == 0 {
+			rootPresent = true
+			break
+		}
+	}
+
+	if !rootPresent {
 		err = fmt.Errorf("invalid user namespace configuration: UID 0 must be mapped")
 		return
 	}
 
-	if userNs.GIDMappings[0].ContainerId != 0 {
+	rootPresent = false
+	for _, v := range userNs.GIDMappings {
+		if v.ContainerId == 0 {
+			rootPresent = true
+			break
+		}
+	}
+
+	if !rootPresent {
 		err = fmt.Errorf("invalid user namespace configuration: GID 0 must be mapped")
 		return
 	}
 
-	hostId := userNs.UIDMappings[0].HostId
-	length := userNs.UIDMappings[0].Length
+	for _, v := range userNs.UIDMappings {
+		hostId := v.HostId
+		length := v.Length
 
-	err = m.record(pod, hostId, length)
+		klog.V(0).InfoS("DEBUG: record user namespace", "podUID", pod, "hostId", hostId, "length", length)
+		err = m.record(pod, hostId, length)
+	}
+
 	return
 }
 
@@ -369,11 +391,21 @@ func (m *UsernsManager) createUserNs(pod *v1.Pod) (userNs userNamespace, err err
 				HostId:      firstID,
 				Length:      length,
 			},
+			{
+				ContainerId: 3000,
+				HostId:      1000000,
+				Length:      length,
+			},
 		},
 		GIDMappings: []idMapping{
 			{
 				ContainerId: 0,
 				HostId:      firstID,
+				Length:      length,
+			},
+			{
+				ContainerId: 3000,
+				HostId:      1000000,
 				Length:      length,
 			},
 		},

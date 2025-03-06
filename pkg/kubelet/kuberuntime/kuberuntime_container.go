@@ -373,7 +373,7 @@ func (m *kubeGenericRuntimeManager) generateContainerConfig(ctx context.Context,
 		Tty:         container.TTY,
 	}
 
-	// if strings.Contains(container.Name, "basic-ctr") {
+	// if strings.Contains(container.Name, "hus-container") {
 	// 	klog.V(0).InfoS("DEBUG: PRE-BEGIN,generateContainerConfig", "config", config)
 	// 	uidMappings := []*runtimeapi.IDMapping{}
 	// 	gidMappings := []*runtimeapi.IDMapping{}
