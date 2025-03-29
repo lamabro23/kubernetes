@@ -5052,6 +5052,11 @@ func validatePodSpecSecurityContext(securityContext *core.PodSecurityContext, sp
 	allErrs := field.ErrorList{}
 
 	if securityContext != nil {
+		if securityContext.FSUser != nil {
+			for _, msg := range validation.IsValidUserID(*securityContext.FSUser) {
+				allErrs = append(allErrs, field.Invalid(fldPath.Child("fsUser"), *(securityContext.FSUser), msg))
+			}
+		}
 		if securityContext.FSGroup != nil {
 			for _, msg := range validation.IsValidGroupID(*securityContext.FSGroup) {
 				allErrs = append(allErrs, field.Invalid(fldPath.Child("fsGroup"), *(securityContext.FSGroup), msg))

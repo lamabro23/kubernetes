@@ -1364,6 +1364,7 @@
         4
       ],
       "supplementalGroupsPolicy": "supplementalGroupsPolicyValue",
+      "fsUser": 14,
       "fsGroup": 5,
       "sysctls": [
         {
