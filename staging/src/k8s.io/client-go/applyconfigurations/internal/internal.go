@@ -7015,6 +7015,9 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: fsGroupChangePolicy
       type:
         scalar: string
+    - name: fsUser
+      type:
+        scalar: numeric
     - name: runAsGroup
       type:
         scalar: numeric

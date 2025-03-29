@@ -891,6 +891,7 @@ spec:
           type: typeValue
         fsGroup: 5
         fsGroupChangePolicy: fsGroupChangePolicyValue
+        fsUser: 14
         runAsGroup: 6
         runAsNonRoot: true
         runAsUser: 2
