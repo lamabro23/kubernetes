@@ -441,6 +441,7 @@ func (og *operationGenerator) GenerateMountVolumeFunc(
 		volumePluginName = volumePlugin.GetPluginName()
 	}
 
+	// klog.V(0).InfoS("DEBUG: In GenerateMountVolumeFunc", "volumePluginName", volumePluginName, "volumeToMount", volumeToMount)
 	mountVolumeFunc := func() volumetypes.OperationContext {
 		// Get mounter plugin
 		volumePlugin, err := og.volumePluginMgr.FindPluginBySpec(volumeToMount.VolumeSpec)
@@ -2151,6 +2152,7 @@ func (og *operationGenerator) legacyCallNodeExpandOnPlugin(resizeOp nodeResizeOp
 }
 
 func checkMountOptionSupport(og *operationGenerator, volumeToMount VolumeToMount, plugin volume.VolumePlugin) error {
+	klog.V(0).InfoS("DEBUG: In checkMountOptionSupport", "volumeToMount", volumeToMount.VolumeName, "plugin", plugin.GetPluginName())
 	mountOptions := util.MountOptionFromSpec(volumeToMount.VolumeSpec)
 
 	if len(mountOptions) > 0 && !plugin.SupportsMountOption() {

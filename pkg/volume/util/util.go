@@ -185,20 +185,28 @@ func UnmountViaEmptyDir(dir string, host volume.VolumeHost, volName string, volS
 
 // MountOptionFromSpec extracts and joins mount options from volume spec with supplied options
 func MountOptionFromSpec(spec *volume.Spec, options ...string) []string {
+	klog.V(0).Infof("DEBUG: In MountOptionFromSpec(), spec: %v, options: %v", spec.PersistentVolume, options)
 	pv := spec.PersistentVolume
 
 	if pv != nil {
 		// Use beta annotation first
 		if mo, ok := pv.Annotations[v1.MountOptionAnnotation]; ok {
 			moList := strings.Split(mo, ",")
+			klog.V(0).Infof("DEBUG: In MountOptionFromSpec(), found mount options in annotation: %v", moList)
 			return JoinMountOptions(moList, options)
 		}
 
 		if len(pv.Spec.MountOptions) > 0 {
 			return JoinMountOptions(pv.Spec.MountOptions, options)
 		}
+
+		// if len(pv.Spec.MountOptions) > 0 {
+		// 	klog.V(0).Infof("DEBUG: In MountOptionFromSpec(), found mount options in spec: %v", JoinMountOptions(pv.Spec.MountOptions, []string{"uid=1050","gid=1050"}))
+		// 	return JoinMountOptions(pv.Spec.MountOptions, append(options, "o=uid=1050,gid=1050"))
+		// }
 	}
 
+	klog.V(0).Infof("DEBUG: In MountOptionFromSpec(), no mount options found in spec, using supplied options: %v", options)
 	return options
 }
 

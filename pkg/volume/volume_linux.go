@@ -70,6 +70,7 @@ func SetVolumeOwnership(mounter Mounter, dir string, fsGroup *int64, fsGroupChan
 }
 
 func changeFilePermission(filename string, fsGroup *int64, readonly bool, info os.FileInfo) error {
+	klog.Infof("Changing permission of %s", filename)
 	err := os.Lchown(filename, -1, int(*fsGroup))
 	if err != nil {
 		klog.ErrorS(err, "Lchown failed", "path", filename)

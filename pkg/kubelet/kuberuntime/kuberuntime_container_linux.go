@@ -70,6 +70,7 @@ func (m *kubeGenericRuntimeManager) applyPlatformSpecificContainerConfig(config 
 			for _, mount := range config.Mounts {
 				mount.UidMappings = cl.SecurityContext.NamespaceOptions.UsernsOptions.Uids
 				mount.GidMappings = cl.SecurityContext.NamespaceOptions.UsernsOptions.Gids
+				klog.V(0).InfoS("DEBUG: applyPlatformSpecificContainerConfig", "mount", mount)
 			}
 		}
 	}

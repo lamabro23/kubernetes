@@ -126,8 +126,8 @@ func parseGetSubIdsOutput(input string) (uint32, uint32, error) {
 // The default mapping includes the entire IDs range except IDs below 65536.
 func (kl *Kubelet) getKubeletMappings() (uint32, uint32, error) {
 	// default mappings to return if there is no specific configuration
-	const defaultFirstID = 1 << 16
-	const defaultLen = 1<<32 - defaultFirstID
+	const defaultFirstID = 1 << 8
+	const defaultLen = 1<<16 - defaultFirstID
 
 	if !utilfeature.DefaultFeatureGate.Enabled(features.UserNamespacesSupport) {
 		return defaultFirstID, defaultLen, nil

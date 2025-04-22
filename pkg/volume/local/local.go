@@ -112,6 +112,7 @@ func getVolumeSource(spec *volume.Spec) (*v1.LocalVolumeSource, bool, error) {
 }
 
 func (plugin *localVolumePlugin) NewMounter(spec *volume.Spec, pod *v1.Pod) (volume.Mounter, error) {
+	klog.V(0).Infof("DEBUG: In NewMounter() for pod %s", pod.Name)
 	_, readOnly, err := getVolumeSource(spec)
 	if err != nil {
 		return nil, err

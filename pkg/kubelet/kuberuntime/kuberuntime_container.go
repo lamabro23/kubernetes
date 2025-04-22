@@ -461,6 +461,7 @@ func makeCDIDevices(opts *kubecontainer.RunContainerOptions) []*runtimeapi.CDIDe
 func (m *kubeGenericRuntimeManager) makeMounts(opts *kubecontainer.RunContainerOptions, container *v1.Container) []*runtimeapi.Mount {
 	volumeMounts := []*runtimeapi.Mount{}
 
+	klog.V(0).InfoS("DEBUG: makeMounts", "opts.PodContainerDir", opts.PodContainerDir)
 	for idx := range opts.Mounts {
 		v := opts.Mounts[idx]
 		selinuxRelabel := v.SELinuxRelabel && selinux.GetEnabled()
@@ -475,6 +476,7 @@ func (m *kubeGenericRuntimeManager) makeMounts(opts *kubecontainer.RunContainerO
 		}
 
 		volumeMounts = append(volumeMounts, mount)
+		klog.V(0).InfoS("DEBUG: makeMounts", "HostPath", v.HostPath, "ContainerPath", v.ContainerPath)
 	}
 
 	// The reason we create and mount the log file in here (not in kubelet) is because

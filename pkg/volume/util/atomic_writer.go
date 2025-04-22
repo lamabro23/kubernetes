@@ -146,6 +146,7 @@ func (w *AtomicWriter) Write(payload map[string]FileProjection, setPerms func(su
 
 	// (2)
 	dataDirPath := filepath.Join(w.targetDir, dataDirName)
+	klog.V(0).Infof("DEBUG: In Write() dataDirPath: %s", dataDirPath)
 	oldTsDir, err := os.Readlink(dataDirPath)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -194,6 +195,7 @@ func (w *AtomicWriter) Write(payload map[string]FileProjection, setPerms func(su
 			return err
 		}
 		tsDirName := filepath.Base(tsDir)
+		klog.V(0).Infof("DEBUG: In Write() tsDirName: %s", tsDirName)
 
 		// (6)
 		if err = w.writePayloadToDir(cleanPayload, tsDir); err != nil {
@@ -212,6 +214,7 @@ func (w *AtomicWriter) Write(payload map[string]FileProjection, setPerms func(su
 
 		// (8)
 		newDataDirPath := filepath.Join(w.targetDir, newDataDirName)
+		klog.V(0).Infof("DEBUG: In Write() newDataDirPath: %s", newDataDirPath)
 		if err = os.Symlink(tsDirName, newDataDirPath); err != nil {
 			if err := os.RemoveAll(tsDir); err != nil {
 				klog.Errorf("%s: error removing new ts directory %s: %v", w.logContext, tsDir, err)
@@ -445,10 +448,10 @@ func (w *AtomicWriter) writePayloadToDir(payload map[string]FileProjection, dir 
 			continue
 		}
 
-		if err := w.chown(fullPath, int(*fileProjection.FsUser), -1); err != nil {
-			klog.Errorf("%s: unable to change file %s with owner %v: %v", w.logContext, fullPath, int(*fileProjection.FsUser), err)
-			return err
-		}
+		// if err := w.chown(fullPath, int(*fileProjection.FsUser), -1); err != nil {
+		// 	klog.Errorf("%s: unable to change file %s with owner %v: %v", w.logContext, fullPath, int(*fileProjection.FsUser), err)
+		// 	return err
+		// }
 	}
 
 	return nil

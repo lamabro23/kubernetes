@@ -1570,6 +1570,7 @@ func (kl *Kubelet) StartGarbageCollection() {
 // initializeModules will initialize internal modules that do not require the container runtime to be up.
 // Note that the modules here must not depend on modules that are not initialized here.
 func (kl *Kubelet) initializeModules() error {
+	klog.V(0).InfoS("DEBUG: In initializeModules()")
 	// Prometheus metrics.
 	metrics.Register(
 		collectors.NewVolumeStatsCollector(kl),

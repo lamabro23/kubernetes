@@ -37,7 +37,7 @@ import (
 )
 
 // length for the user namespace to create (65536).
-const userNsLength = (1 << 16)
+const userNsLength = (1 << 8)
 
 // Create a new map when we removed enough pods to avoid memory leaks
 // since Go maps never free memory.
@@ -134,6 +134,7 @@ func MakeUserNsManager(kl userNsPodsManager) (*UsernsManager, error) {
 	if err != nil {
 		return nil, err
 	}
+	klog.V(0).InfoS("DEBUG: In MakeUserNsManager", "kubeletMappingID", kubeletMappingID, "kubeletMappingLen", kubeletMappingLen)
 
 	if kubeletMappingID%userNsLength != 0 {
 		return nil, fmt.Errorf("kubelet user assigned ID %v is not a multiple of %v", kubeletMappingID, userNsLength)
@@ -195,6 +196,7 @@ func (m *UsernsManager) recordPodMappings(pod types.UID) error {
 		return nil
 	}
 
+	klog.V(0).InfoS("DEBUG: recordPodMappings", "podUID", pod, "content", string(content))
 	_, err = m.parseUserNsFileAndRecord(pod, content)
 	return err
 }
@@ -229,17 +231,19 @@ func (m *UsernsManager) allocateOne(pod types.UID) (firstID uint32, length uint3
 
 // record stores the user namespace [from; from+length] to the specified pod.
 func (m *UsernsManager) record(pod types.UID, from, length uint32) (err error) {
-	if length != userNsLength {
-		return fmt.Errorf("wrong user namespace length %v", length)
-	}
+	// if length != userNsLength {
+	// 	return fmt.Errorf("wrong user namespace length %v", length)
+	// }
 	if from%userNsLength != 0 {
 		return fmt.Errorf("wrong user namespace offset specified %v", from)
 	}
 	prevFrom, found := m.usedBy[pod]
-	if found && prevFrom != from {
-		return fmt.Errorf("different user namespace range already used by pod %q", pod)
-	}
-	index := int(from/userNsLength) - m.off
+	// if found && prevFrom != from {
+	// 	return fmt.Errorf("different user namespace range already used by pod %q", pod)
+	// }
+	index := int(from/userNsLength) // - m.off
+	klog.V(0).InfoS("DEBUG: record", "podUID", pod, "from", from, "length", length, "index", index, "m.len", m.len)
+	klog.V(0).Infof("DEBUG: %v || %v => %v", index < 0, index >= m.len, index < 0 || index >= m.len)
 	if index < 0 || index >= m.len {
 		return fmt.Errorf("id %v is out of range", from)
 	}
@@ -316,10 +320,7 @@ func (m *UsernsManager) parseUserNsFileAndRecord(pod types.UID, content []byte) 
 		return
 	}
 
-	if len(userNs.UIDMappings) != 1 {
-		err = fmt.Errorf("invalid user namespace configuration: no more than one mapping allowed.")
-		return
-	}
+	klog.V(0).InfoS("DEBUG: parsing user namespace mappings file", "podUID", pod, "userNs", userNs)
 
 	if len(userNs.UIDMappings) != len(userNs.GIDMappings) {
 		err = fmt.Errorf("invalid user namespace configuration: GID and UID mappings should be identical.")
@@ -365,6 +366,7 @@ func (m *UsernsManager) parseUserNsFileAndRecord(pod types.UID, content []byte) 
 		hostId := v.HostId
 		length := v.Length
 
+		// 																		 1024 			   1
 		klog.V(0).InfoS("DEBUG: record user namespace", "podUID", pod, "hostId", hostId, "length", length)
 		err = m.record(pod, hostId, length)
 	}
@@ -374,6 +376,7 @@ func (m *UsernsManager) parseUserNsFileAndRecord(pod types.UID, content []byte) 
 
 func (m *UsernsManager) createUserNs(pod *v1.Pod) (userNs userNamespace, err error) {
 	firstID, length, err := m.allocateOne(pod.UID)
+	klog.V(0).InfoS("DEBUG: allocateOne", "podUID", pod.UID, "firstID", firstID, "length", length)
 	if err != nil {
 		return
 	}
@@ -387,27 +390,37 @@ func (m *UsernsManager) createUserNs(pod *v1.Pod) (userNs userNamespace, err err
 	userNs = userNamespace{
 		UIDMappings: []idMapping{
 			{
-				ContainerId: 0,
-				HostId:      firstID,
-				Length:      length,
+				ContainerId: 1001,
+				HostId:      0,
+				Length:      1,
 			},
 			{
-				ContainerId: 3000,
-				HostId:      1000000,
+				ContainerId: 0,
+				HostId:      1024,
 				Length:      length,
 			},
+			// {
+			// 	ContainerId: 65535,
+			// 	HostId:      1024,
+			// 	Length:      1,
+			// },
 		},
 		GIDMappings: []idMapping{
 			{
-				ContainerId: 0,
-				HostId:      firstID,
-				Length:      length,
+				ContainerId: 1001,
+				HostId:      0,
+				Length:      1,
 			},
 			{
-				ContainerId: 3000,
-				HostId:      1000000,
+				ContainerId: 0,
+				HostId:      1024,
 				Length:      length,
 			},
+			// {
+			// 	ContainerId: 65535,
+			// 	HostId:      1024,
+			// 	Length:      1,
+			// },
 		},
 	}
 
@@ -453,6 +466,7 @@ func (m *UsernsManager) GetOrCreateUserNamespaceMappings(pod *v1.Pod, runtimeHan
 	defer m.lock.Unlock()
 
 	content, err := m.readMappingsFromFile(pod.UID)
+	klog.V(0).InfoS("DEBUG: readMappingsFromFile", "podUID", pod.UID, "content", string(content), "err", err)
 	if err != nil && err != utilstore.ErrKeyNotFound {
 		return nil, err
 	}

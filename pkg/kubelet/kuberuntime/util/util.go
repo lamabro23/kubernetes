@@ -118,6 +118,7 @@ func NamespacesForPod(pod *v1.Pod, runtimeHelper kubecontainer.RuntimeHelper, rc
 		return nil, err
 	}
 
+	klog.V(0).InfoS("DEBUG: User namespace options", "pod", klog.KObj(pod), "options", userNs)
 	return &runtimeapi.NamespaceOption{
 		Ipc:           IpcNamespaceForPod(pod),
 		Network:       NetworkNamespaceForPod(pod),
