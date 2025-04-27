@@ -5689,6 +5689,10 @@ message SecurityContext {
   // Note that this field cannot be set when spec.os.name is windows.
   // +optional
   optional AppArmorProfile appArmorProfile = 12;
+
+  optional int64 fsUser = 13;
+
+  optional int64 fsGroup = 14;
 }
 
 // SerializedReference is a reference to serialized object.

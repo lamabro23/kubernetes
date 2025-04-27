@@ -7467,15 +7467,42 @@ func ValidateSecurityContext(sc *core.SecurityContext, fldPath *field.Path, host
 		}
 	}
 
+	if sc.FSUser != nil {
+		for _, msg := range validation.IsValidUsernsUserID(*sc.FSUser) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("fsUser"), *sc.FSUser, msg))
+		}
+	}
+
+	if sc.FSGroup != nil {
+		for _, msg := range validation.IsValidUsernsGroupID(*sc.FSGroup) {
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("fsGroup"), *sc.FSGroup, msg))
+		}
+	}
+
+	if sc.FSUser != nil && sc.FSGroup != nil && *sc.FSUser != *sc.FSGroup {
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("fsUser"), sc.FSUser, "fsUser and fsGroup must be the same"))
+		allErrs = append(allErrs, field.Invalid(fldPath.Child("fsGroup"), sc.FSGroup, "fsUser and fsGroup must be the same"))
+	}
+
 	if sc.RunAsUser != nil {
 		for _, msg := range validation.IsValidUserID(*sc.RunAsUser) {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("runAsUser"), *sc.RunAsUser, msg))
+		}
+
+		if sc.FSUser != nil && *sc.RunAsUser != *sc.FSUser {
+			// fsGroup is not checked here because it is already checked above to be the same
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("runAsUser"), sc.RunAsUser, "runAsUser must be the same as fsUser"))
 		}
 	}
 
 	if sc.RunAsGroup != nil {
 		for _, msg := range validation.IsValidGroupID(*sc.RunAsGroup) {
 			allErrs = append(allErrs, field.Invalid(fldPath.Child("runAsGroup"), *sc.RunAsGroup, msg))
+		}
+
+		if sc.FSGroup != nil && *sc.RunAsGroup != *sc.FSGroup {
+			// fsUser is not checked here because it is already checked above to be the same
+			allErrs = append(allErrs, field.Invalid(fldPath.Child("runAsGroup"), sc.RunAsGroup, "runAsGroup must be the same as fsGroup"))
 		}
 	}
 
@@ -7488,6 +7515,7 @@ func ValidateSecurityContext(sc *core.SecurityContext, fldPath *field.Path, host
 		}
 
 	}
+
 	allErrs = append(allErrs, validateSeccompProfileField(sc.SeccompProfile, fldPath.Child("seccompProfile"))...)
 	if sc.AllowPrivilegeEscalation != nil && !*sc.AllowPrivilegeEscalation {
 		if sc.Privileged != nil && *sc.Privileged {

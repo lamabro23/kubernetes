@@ -6475,6 +6475,8 @@ type SecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	AppArmorProfile *AppArmorProfile
+	FSUser          *int64
+	FSGroup         *int64
 }
 
 // ProcMountType defines the type of proc mount

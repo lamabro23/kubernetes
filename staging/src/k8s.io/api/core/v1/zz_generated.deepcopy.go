@@ -5621,6 +5621,16 @@ func (in *SecurityContext) DeepCopyInto(out *SecurityContext) {
 		*out = new(AppArmorProfile)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.FSUser != nil {
+		in, out := &in.FSUser, &out.FSUser
+		*out = new(int64)
+		**out = **in
+	}
+	if in.FSGroup != nil {
+		in, out := &in.FSGroup, &out.FSGroup
+		*out = new(int64)
+		**out = **in
+	}
 	return
 }
 

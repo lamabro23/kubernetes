@@ -339,6 +339,27 @@ func IsValidUserID(uid int64) []string {
 	return []string{InclusiveRangeError(minUserID, maxUserID)}
 }
 
+const (
+	minUsernsUserID  = 0
+	maxUsernsUserID  = math.MaxInt16
+	minUsernsGroupID = 0
+	maxUsernsGroupID = math.MaxInt16
+)
+
+func IsValidUsernsGroupID(gid int64) []string {
+	if minUsernsGroupID <= gid && gid <= maxUsernsGroupID {
+		return nil
+	}
+	return []string{InclusiveRangeError(minUsernsGroupID, maxUsernsGroupID)}
+}
+
+func IsValidUsernsUserID(uid int64) []string {
+	if minUsernsUserID <= uid && uid <= maxUsernsUserID {
+		return nil
+	}
+	return []string{InclusiveRangeError(minUsernsUserID, maxUsernsUserID)}
+}
+
 var portNameCharsetRegex = regexp.MustCompile("^[-a-z0-9]+$")
 var portNameOneLetterRegexp = regexp.MustCompile("[a-z]")
 

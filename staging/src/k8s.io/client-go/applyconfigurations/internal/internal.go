@@ -7962,6 +7962,12 @@ var schemaYAML = typed.YAMLObject(`types:
     - name: capabilities
       type:
         namedType: io.k8s.api.core.v1.Capabilities
+    - name: fsGroup
+      type:
+        scalar: numeric
+    - name: fsUser
+      type:
+        scalar: numeric
     - name: privileged
       type:
         scalar: boolean

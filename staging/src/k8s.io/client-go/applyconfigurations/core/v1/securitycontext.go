@@ -37,6 +37,8 @@ type SecurityContextApplyConfiguration struct {
 	ProcMount                *corev1.ProcMountType                            `json:"procMount,omitempty"`
 	SeccompProfile           *SeccompProfileApplyConfiguration                `json:"seccompProfile,omitempty"`
 	AppArmorProfile          *AppArmorProfileApplyConfiguration               `json:"appArmorProfile,omitempty"`
+	FSUser                   *int64                                           `json:"fsUser,omitempty"`
+	FSGroup                  *int64                                           `json:"fsGroup,omitempty"`
 }
 
 // SecurityContextApplyConfiguration constructs a declarative configuration of the SecurityContext type for use with
@@ -138,5 +140,21 @@ func (b *SecurityContextApplyConfiguration) WithSeccompProfile(value *SeccompPro
 // If called multiple times, the AppArmorProfile field is set to the value of the last call.
 func (b *SecurityContextApplyConfiguration) WithAppArmorProfile(value *AppArmorProfileApplyConfiguration) *SecurityContextApplyConfiguration {
 	b.AppArmorProfile = value
+	return b
+}
+
+// WithFSUser sets the FSUser field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FSUser field is set to the value of the last call.
+func (b *SecurityContextApplyConfiguration) WithFSUser(value int64) *SecurityContextApplyConfiguration {
+	b.FSUser = &value
+	return b
+}
+
+// WithFSGroup sets the FSGroup field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the FSGroup field is set to the value of the last call.
+func (b *SecurityContextApplyConfiguration) WithFSGroup(value int64) *SecurityContextApplyConfiguration {
+	b.FSGroup = &value
 	return b
 }

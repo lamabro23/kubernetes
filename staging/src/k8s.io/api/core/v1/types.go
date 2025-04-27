@@ -7776,6 +7776,8 @@ type SecurityContext struct {
 	// Note that this field cannot be set when spec.os.name is windows.
 	// +optional
 	AppArmorProfile *AppArmorProfile `json:"appArmorProfile,omitempty" protobuf:"bytes,12,opt,name=appArmorProfile"`
+	FSUser          *int64           `json:"fsUser,omitempty" protobuf:"varint,13,opt,name=fsUser"`
+	FSGroup         *int64           `json:"fsGroup,omitempty" protobuf:"varint,14,opt,name=fsGroup"`
 }
 
 // +enum

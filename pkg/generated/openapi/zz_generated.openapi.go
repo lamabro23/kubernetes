@@ -31068,6 +31068,18 @@ func schema_k8sio_api_core_v1_SecurityContext(ref common.ReferenceCallback) comm
 							Ref:         ref("k8s.io/api/core/v1.AppArmorProfile"),
 						},
 					},
+					"fsUser": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
+					"fsGroup": {
+						SchemaProps: spec.SchemaProps{
+							Type:   []string{"integer"},
+							Format: "int64",
+						},
+					},
 				},
 			},
 		},

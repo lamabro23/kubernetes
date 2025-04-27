@@ -8068,6 +8068,8 @@ func autoConvert_v1_SecurityContext_To_core_SecurityContext(in *corev1.SecurityC
 	out.ProcMount = (*core.ProcMountType)(unsafe.Pointer(in.ProcMount))
 	out.SeccompProfile = (*core.SeccompProfile)(unsafe.Pointer(in.SeccompProfile))
 	out.AppArmorProfile = (*core.AppArmorProfile)(unsafe.Pointer(in.AppArmorProfile))
+	out.FSUser = (*int64)(unsafe.Pointer(in.FSUser))
+	out.FSGroup = (*int64)(unsafe.Pointer(in.FSGroup))
 	return nil
 }
 
@@ -8089,6 +8091,8 @@ func autoConvert_core_SecurityContext_To_v1_SecurityContext(in *core.SecurityCon
 	out.ProcMount = (*corev1.ProcMountType)(unsafe.Pointer(in.ProcMount))
 	out.SeccompProfile = (*corev1.SeccompProfile)(unsafe.Pointer(in.SeccompProfile))
 	out.AppArmorProfile = (*corev1.AppArmorProfile)(unsafe.Pointer(in.AppArmorProfile))
+	out.FSUser = (*int64)(unsafe.Pointer(in.FSUser))
+	out.FSGroup = (*int64)(unsafe.Pointer(in.FSGroup))
 	return nil
 }
 

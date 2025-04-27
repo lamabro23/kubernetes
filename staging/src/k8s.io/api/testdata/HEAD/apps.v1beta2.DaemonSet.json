@@ -787,7 +787,9 @@
               "appArmorProfile": {
                 "type": "typeValue",
                 "localhostProfile": "localhostProfileValue"
-              }
+              },
+              "fsUser": 13,
+              "fsGroup": 14
             },
             "stdin": true,
             "stdinOnce": true,
@@ -1083,7 +1085,9 @@
               "appArmorProfile": {
                 "type": "typeValue",
                 "localhostProfile": "localhostProfileValue"
-              }
+              },
+              "fsUser": 13,
+              "fsGroup": 14
             },
             "stdin": true,
             "stdinOnce": true,
@@ -1379,7 +1383,9 @@
               "appArmorProfile": {
                 "type": "typeValue",
                 "localhostProfile": "localhostProfileValue"
-              }
+              },
+              "fsUser": 13,
+              "fsGroup": 14
             },
             "stdin": true,
             "stdinOnce": true,

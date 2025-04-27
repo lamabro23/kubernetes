@@ -414,6 +414,8 @@ spec:
                 - addValue
                 drop:
                 - dropValue
+              fsGroup: 14
+              fsUser: 13
               privileged: true
               procMount: procMountValue
               readOnlyRootFilesystem: true
@@ -630,6 +632,8 @@ spec:
                 - addValue
                 drop:
                 - dropValue
+              fsGroup: 14
+              fsUser: 13
               privileged: true
               procMount: procMountValue
               readOnlyRootFilesystem: true
@@ -848,6 +852,8 @@ spec:
                 - addValue
                 drop:
                 - dropValue
+              fsGroup: 14
+              fsUser: 13
               privileged: true
               procMount: procMountValue
               readOnlyRootFilesystem: true
