@@ -316,35 +316,51 @@ func (m *UsernsManager) parseUserNsFileAndRecord(pod types.UID, content []byte) 
 		return
 	}
 
-	if len(userNs.UIDMappings) != 1 {
-		err = fmt.Errorf("invalid user namespace configuration: no more than one mapping allowed.")
-		return
-	}
-
 	if len(userNs.UIDMappings) != len(userNs.GIDMappings) {
 		err = fmt.Errorf("invalid user namespace configuration: GID and UID mappings should be identical.")
 		return
 	}
 
-	if userNs.UIDMappings[0] != userNs.GIDMappings[0] {
-		err = fmt.Errorf("invalid user namespace configuration: GID and UID mapping should be identical")
-		return
+	for i := range userNs.UIDMappings {
+		if userNs.UIDMappings[i].ContainerId != userNs.GIDMappings[i].ContainerId {
+			err = fmt.Errorf("invalid user namespace configuration: GID and UID mappings should be identical.")
+			return
+		}
 	}
 
 	// We don't produce configs without root mapped and some runtimes assume it is mapped.
 	// Validate the file has something we produced and can digest.
-	if userNs.UIDMappings[0].ContainerId != 0 {
+	rootPresent := false
+	for _, v := range userNs.UIDMappings {
+		if v.ContainerId == 0 {
+			rootPresent = true
+			break
+		}
+	}
+
+	if !rootPresent {
 		err = fmt.Errorf("invalid user namespace configuration: UID 0 must be mapped")
 		return
 	}
 
-	if userNs.GIDMappings[0].ContainerId != 0 {
+	rootPresent = false
+	for _, v := range userNs.GIDMappings {
+		if v.ContainerId == 0 {
+			rootPresent = true
+			break
+		}
+	}
+
+	if !rootPresent {
 		err = fmt.Errorf("invalid user namespace configuration: GID 0 must be mapped")
 		return
 	}
 
 	hostId := userNs.UIDMappings[0].HostId
-	length := userNs.UIDMappings[0].Length
+	length := uint32(0)
+	for _, v := range userNs.UIDMappings {
+		length += v.Length
+	}
 
 	err = m.record(pod, hostId, length)
 	return
@@ -379,6 +395,65 @@ func (m *UsernsManager) createUserNs(pod *v1.Pod) (userNs userNamespace, err err
 		},
 	}
 
+	return userNs, m.writeMappingsToFile(pod.UID, userNs)
+}
+
+func (m *UsernsManager) createUserNsFromFsValues(pod *v1.Pod) (userNs userNamespace, err error) {
+	firstID, length, err := m.allocateOne(pod.UID)
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			m.releaseWithLock(pod.UID)
+		}
+	}()
+
+	uid := *pod.Spec.Containers[0].SecurityContext.FSUser
+	gid := *pod.Spec.Containers[0].SecurityContext.FSGroup
+	// These values should be the same since validation doesn't allow
+	// different values for fsGroup and fsUser at this point.
+	if uid != gid {
+		return userNs, fmt.Errorf("fsUser %d and fsGroup %d must be the same", uid, gid)
+	}
+
+	userNs = userNamespace{
+		UIDMappings: []idMapping{
+			{
+				ContainerId: 0,
+				HostId:      firstID,
+				Length:      uint32(uid),
+			},
+			{
+				ContainerId: uint32(uid),
+				HostId:      0,
+				Length:      1,
+			},
+			{
+				ContainerId: uint32(uid) + 1,
+				HostId:      firstID + uint32(uid),
+				Length:      length - uint32(uid) - 1,
+			},
+		},
+		GIDMappings: []idMapping{
+			{
+				ContainerId: 0,
+				HostId:      firstID,
+				Length:      uint32(gid),
+			},
+			{
+				ContainerId: uint32(gid),
+				HostId:      0,
+				Length:      1,
+			},
+			{
+				ContainerId: uint32(gid) + 1,
+				HostId:      firstID + uint32(gid),
+				Length:      length - uint32(gid) - 1,
+			},
+		},
+	}
 	return userNs, m.writeMappingsToFile(pod.UID, userNs)
 }
 
@@ -428,6 +503,11 @@ func (m *UsernsManager) GetOrCreateUserNamespaceMappings(pod *v1.Pod, runtimeHan
 	var userNs userNamespace
 	if string(content) != "" {
 		userNs, err = m.parseUserNsFileAndRecord(pod.UID, content)
+		if err != nil {
+			return nil, err
+		}
+	} else if fsValuesPresent(pod.Spec.Containers) {
+		userNs, err = m.createUserNsFromFsValues(pod)
 		if err != nil {
 			return nil, err
 		}
@@ -517,4 +597,13 @@ func (m *UsernsManager) CleanupOrphanedPodUsernsAllocations(pods []*v1.Pod, runn
 
 func EnabledUserNamespacesSupport() bool {
 	return utilfeature.DefaultFeatureGate.Enabled(features.UserNamespacesSupport)
+}
+
+func fsValuesPresent(containers []v1.Container) bool {
+	for _, container := range containers {
+		if container.SecurityContext != nil && (container.SecurityContext.FSUser != nil || container.SecurityContext.FSGroup != nil) {
+			return true
+		}
+	}
+	return false
 }

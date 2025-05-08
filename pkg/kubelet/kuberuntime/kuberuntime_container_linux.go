@@ -70,6 +70,14 @@ func (m *kubeGenericRuntimeManager) applyPlatformSpecificContainerConfig(config 
 			for _, mount := range config.Mounts {
 				mount.UidMappings = cl.SecurityContext.NamespaceOptions.UsernsOptions.Uids
 				mount.GidMappings = cl.SecurityContext.NamespaceOptions.UsernsOptions.Gids
+				if container.SecurityContext != nil {
+					if container.SecurityContext.FSUser != nil {
+						mount.FsUser = &runtimeapi.Int64Value{Value: *container.SecurityContext.FSUser}
+					}
+					if container.SecurityContext.FSGroup != nil {
+						mount.FsGroup = &runtimeapi.Int64Value{Value: *container.SecurityContext.FSGroup}
+					}
+				}
 			}
 		}
 	}
