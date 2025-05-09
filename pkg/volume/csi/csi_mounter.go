@@ -331,7 +331,7 @@ func (c *csiMountMgr) SetUpAt(dir string, mounterArgs volume.MounterArgs) error 
 		}
 	}
 
-	if !driverSupportsCSIVolumeMountGroup && c.supportsFSGroup(fsType, mounterArgs.FsGroup, fsGroupPolicy) {
+	if !driverSupportsCSIVolumeMountGroup && c.supportsFSGroup(fsType, mounterArgs.FsUser, mounterArgs.FsGroup, fsGroupPolicy) {
 		// Driver doesn't support applying FSGroup. Kubelet must apply it instead.
 
 		// fullPluginName helps to distinguish different driver from csi plugin
@@ -343,7 +343,6 @@ func (c *csiMountMgr) SetUpAt(dir string, mounterArgs volume.MounterArgs) error 
 			//      cleaned up.
 			return volumetypes.NewUncertainProgressError(fmt.Sprintf("applyFSGroup failed for vol %s: %v", c.volumeID, err))
 		}
-		klog.V(4).Info(log("mounter.SetupAt fsGroup [%d] applied successfully to %s", *mounterArgs.FsGroup, c.volumeID))
 	}
 
 	klog.V(4).Info(log("mounter.SetUp successfully requested NodePublish [%s]", dir))
@@ -452,8 +451,8 @@ func (c *csiMountMgr) TearDownAt(dir string) error {
 	return nil
 }
 
-func (c *csiMountMgr) supportsFSGroup(fsType string, fsGroup *int64, driverPolicy storage.FSGroupPolicy) bool {
-	if fsGroup == nil || driverPolicy == storage.NoneFSGroupPolicy || c.readOnly {
+func (c *csiMountMgr) supportsFSGroup(fsType string, fsUser, fsGroup *int64, driverPolicy storage.FSGroupPolicy) bool {
+	if fsGroup == nil && fsUser == nil || driverPolicy == storage.NoneFSGroupPolicy || c.readOnly {
 		return false
 	}
 
